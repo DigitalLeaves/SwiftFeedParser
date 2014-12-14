@@ -8,7 +8,7 @@
 
 import UIKit
 
-let kFeedParserExampleFeedSourceURL = "http://nshipster.com/feed.xml"
+let kFeedParserExampleFeedSourceURL = "http://digitalleaves.com/blog/feed/"
 
 class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource, FeedParserDelegate {
 
@@ -105,6 +105,15 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         return cell
     }
 
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        if let feedItem = entries?[indexPath.row] {
+            if let url = NSURL(string: feedItem.feedLink ?? "") {
+                UIApplication.sharedApplication().openURL(url)
+            }
+        }
+        
+    }
+    
     // MARK: - FeedParserDelegate methods
     
     func feedParser(parser: FeedParser, didParseChannel channel: FeedChannel) {
