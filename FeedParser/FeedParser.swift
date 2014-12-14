@@ -317,24 +317,8 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentFeedItem?.feedAuthor = self.currentElementContent
         }
             
-        // enclosures (RSS items only)
-        else if self.currentPath.isFeedItemEnclosure(self.feedType) {
-            let type:String? = self.currentElementAttributes?["type"] as? NSString
-            let content: String? = self.currentElementAttributes?["url"] as? NSString
-            let length:Int? = self.currentElementAttributes?["length"] as? Int
-            if content != nil && type != nil && length != nil {
-                let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
-                self.currentFeedItem?.feedEnclosures?.append(feedEnclosure)
-            }
-        }
-            
-            // comments
-        else if (self.currentPath.isFeedItemComments(self.feedType)) {
-            self.currentFeedItem?.feedCommentsURL = self.currentElementContent
-        }
-            
-            // GUID / Identifier
-        else if (self.currentPath.isFeedItemIdentifier(self.feedType)) {
+        // GUID / Identifier
+        else if self.currentPath == "/feed/entry/id" {
             self.currentFeedItem?.feedIdentifier = self.currentElementContent
         }
         
@@ -397,6 +381,22 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         // language (channels only)
         else if self.currentPath == "/rss/channel/language" {
             self.currentFeedChannel?.channelLanguage = self.currentElementContent
+        }
+            
+        // comments
+        else if self.currentPath == "/rss/channel/item/comments" {
+            self.currentFeedItem?.feedCommentsURL = self.currentElementContent
+        }
+        
+        // enclosures (RSS items only)
+        else if self.currentPath == "/rss/channel/item/enclosure" {
+            let type:String? = self.currentElementAttributes?["type"] as? NSString
+            let content: String? = self.currentElementAttributes?["url"] as? NSString
+            let length:Int? = self.currentElementAttributes?["length"] as? Int
+            if content != nil && type != nil && length != nil {
+                let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
+                self.currentFeedItem?.feedEnclosures?.append(feedEnclosure)
+            }
         }
             
         // category
@@ -484,9 +484,20 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         else if self.currentPath == "/rdf:RDF/channel/dc:language" {
             self.currentFeedChannel?.channelLanguage = self.currentElementContent
         }
+        
+        // enclosures (RSS items only)
+        else if self.currentPath == "/rdf:RDF/item/enc:enclosure" {
+            let type:String? = self.currentElementAttributes?["type"] as? NSString
+            let content: String? = self.currentElementAttributes?["url"] as? NSString
+            let length:Int? = self.currentElementAttributes?["length"] as? Int
+            if content != nil && type != nil && length != nil {
+                let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
+                self.currentFeedItem?.feedEnclosures?.append(feedEnclosure)
+            }
+        }
             
         // category
-        else if self.currentPath.isFeedChannelCategory(self.feedType) {
+        else if self.currentPath == "/rdf:RDF/channel/dc:category" {
             if (self.feedType == .Atom) { self.currentFeedChannel?.channelCategory = self.currentElementAttributes?["term"] as? NSString }
             else { self.currentFeedChannel?.channelCategory = self.currentElementContent }
         }
