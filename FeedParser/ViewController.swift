@@ -44,6 +44,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     func searchBarSearchButtonClicked(searchBar: UISearchBar) {
         if countElements(searchBar.text) < 1 { return }
         self.searchBar.resignFirstResponder()
+        self.tableView.hidden =  true
         
         self.entries = []
         self.loadingLabel.text = "Loading entries from \(searchBar.text)"
