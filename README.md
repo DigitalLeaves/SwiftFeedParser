@@ -15,7 +15,7 @@ The project contains a simple demo/testing App. When run, it will show a basic U
 Integration
 ===========
 
-The library user a main class called FeedParser that employs a delegate approach. For using it, you must import the following files in your project:
+The library uses a main class called FeedParser that employs a delegate approach. For using it, you must import the following files in your project:
 
 * FeedParser.swift
 * NSDate+FeedsDate.swift
