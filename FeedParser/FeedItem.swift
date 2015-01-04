@@ -31,7 +31,7 @@ class FeedItem: NSObject, Printable, Equatable, Hashable {
     var feedCategories: [String]?
     var feedCommentsURL: String?
     var feedComments: [String]?
-    var feedEnclosures: [FeedEnclosure]?
+    var feedEnclosures: [FeedEnclosure] = []
     var feedIdentifier: String?
     var feedSource: String? // rss channel where the feed came from, name or url.
     
@@ -106,7 +106,7 @@ class FeedItem: NSObject, Printable, Equatable, Hashable {
             if (feedAuthor != nil) { desc += "\t- Author: \(feedAuthor)\n" }
             if (feedCategories != nil) { desc += "\t- Categories: \(feedCategories)\n" }
             if (feedCommentsURL != nil) { desc += "\t- Comments URL: \(feedCommentsURL)\n" }
-            if (feedEnclosures != nil) { desc += "\t- Enclosures: \(feedEnclosures)\n" }
+            if (!feedEnclosures.isEmpty) { desc += "\t- Enclosures: \(feedEnclosures)\n" }
             if (feedIdentifier != nil) { desc += "\t- Identifier: \(feedIdentifier)\n" }
             if (feedSource != nil) { desc += "\t- Source channel: \(feedSource)\n" }
             
