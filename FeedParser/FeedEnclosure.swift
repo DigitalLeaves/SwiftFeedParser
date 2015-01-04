@@ -10,9 +10,9 @@ import UIKit
 class FeedEnclosure: NSObject {
     var url: String
     var type: String
-    var length: Int
+    var length: String
     
-    init(url: String, type: String, length: Int) {
+    init(url: String, type: String, length: String) {
         self.url = url
         self.type = type
         self.length = length
