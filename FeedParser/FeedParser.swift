@@ -392,10 +392,10 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         else if self.currentPath == "/rss/channel/item/enclosure" {
             let type:String? = self.currentElementAttributes?["type"] as? NSString
             let content: String? = self.currentElementAttributes?["url"] as? NSString
-            let length:Int? = self.currentElementAttributes?["length"] as? Int
+            let length:Int? = (self.currentElementAttributes?["length"] as? NSString)?.integerValue
             if content != nil && type != nil && length != nil {
                 let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
-                self.currentFeedItem?.feedEnclosures?.append(feedEnclosure)
+                self.currentFeedItem?.feedEnclosures.append(feedEnclosure)
             }
         }
             
@@ -489,10 +489,10 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         else if self.currentPath == "/rdf:RDF/item/enc:enclosure" {
             let type:String? = self.currentElementAttributes?["type"] as? NSString
             let content: String? = self.currentElementAttributes?["url"] as? NSString
-            let length:Int? = self.currentElementAttributes?["length"] as? Int
+            let length:Int? = (self.currentElementAttributes?["length"] as? NSString)?.integerValue
             if content != nil && type != nil && length != nil {
                 let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
-                self.currentFeedItem?.feedEnclosures?.append(feedEnclosure)
+                self.currentFeedItem?.feedEnclosures.append(feedEnclosure)
             }
         }
             
@@ -562,10 +562,10 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             else if (rel == "enclosure") {
                 // generate a new enclosure and add it to the current feed item.
                 let type:String? = attributes?["type"] as? NSString
-                let length:Int? = attributes?["length"] as? Int
+                let length:Int? = (attributes?["length"] as? NSString)?.integerValue
                 if content != nil && type != nil && length != nil {
                     let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
-                    self.currentFeedItem?.feedEnclosures?.append(feedEnclosure)
+                    self.currentFeedItem?.feedEnclosures.append(feedEnclosure)
                 }
 
             }
