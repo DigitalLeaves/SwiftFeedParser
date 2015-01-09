@@ -151,9 +151,9 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentElementContent = ""
             
             // Determine the type of feed.
-            if elementName == FeedType.Atom.rawValue { self.feedType = .Atom; return }
-            if elementName == FeedType.RSS1.rawValue { self.feedType = .RSS1; return }
-            if elementName == FeedType.RSS2.rawValue { self.feedType = .RSS2; return }
+            if qName == FeedType.Atom.rawValue { self.feedType = .Atom; return }
+            if qName == FeedType.RSS1.rawValue { self.feedType = .RSS1; return }
+            if qName == FeedType.RSS2.rawValue { self.feedType = .RSS2; return }
             
             // parse depending on feed type
             if (self.feedType == .Atom) { self.parseStartOfAtomElement(elementName, attributes: attributeDict) }
