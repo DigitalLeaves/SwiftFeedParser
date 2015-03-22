@@ -15,7 +15,7 @@ let kReadyAtomChannelName = "feed"
 
 
 enum FeedType: String {
-    case Unknown = "unknown", Atom = "feed", RSS1 = "rdf:RDF", RSS2 = "rss"
+    case Unknown = "unknown", Atom = "feed", RSS1 = "rdf:RDF", RSS1Alt = "RDF", RSS2 = "rss"
     
     func feedsDateFormat() -> DateFormat? {
         switch self {
@@ -152,7 +152,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             
             // Determine the type of feed.
             if elementName == FeedType.Atom.rawValue { self.feedType = .Atom; return }
-            if elementName == FeedType.RSS1.rawValue { self.feedType = .RSS1; return }
+            if elementName == FeedType.RSS1.rawValue || elementName == FeedType.RSS1Alt.rawValue { self.feedType = .RSS1; return }
             if elementName == FeedType.RSS2.rawValue { self.feedType = .RSS2; return }
             
             // parse depending on feed type

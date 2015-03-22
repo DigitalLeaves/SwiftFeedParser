@@ -127,7 +127,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     
     func feedParser(parser: FeedParser, didParseItem item: FeedItem) {
         dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            println("Feed parser did parse item \(item.feedTitle)")
+            println("Feed parser did parse item \(item.description)")
             self.entries?.append(item)
         })
     }
