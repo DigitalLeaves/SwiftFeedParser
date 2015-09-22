@@ -7,7 +7,7 @@
 
 import UIKit
 
-class FeedChannel: NSObject, Printable, Equatable, Hashable {
+class FeedChannel: NSObject {
     // MARK: - mandatory properties
     var channelTitle: String?
     var channelURL: String?     // url of the RSS feed
