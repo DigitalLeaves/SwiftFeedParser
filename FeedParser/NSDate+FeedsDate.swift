@@ -40,7 +40,7 @@ extension NSDate {
                 let formatter = NSDateFormatter()
                 formatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
                 formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZ"
-                if let date = formatter.dateFromString(string) {
+                if let date = formatter.dateFromString(string as String) {
                     self.init(timeInterval:0, sinceDate:date)
                 } else {
                     self.init()
@@ -59,7 +59,7 @@ extension NSDate {
                 let formatter = NSDateFormatter()
                 formatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
                 formatter.dateFormat = "EEE, d MMM yyyy HH:mm:ss ZZZ"
-                if let date = formatter.dateFromString(string) {
+                if let date = formatter.dateFromString(string as String) {
                     self.init(timeInterval:0, sinceDate:date)
                 } else {
                     self.init()
@@ -78,7 +78,7 @@ extension NSDate {
                 let formatter = NSDateFormatter()
                 formatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
                 formatter.dateFormat = "d MMM yyyy HH:mm:ss ZZZ"
-                if let date = formatter.dateFromString(string) {
+                if let date = formatter.dateFromString(string as String) {
                     self.init(timeInterval:0, sinceDate:date)
                 } else {
                     self.init()
@@ -89,7 +89,7 @@ extension NSDate {
                 let formatter = NSDateFormatter()
                 formatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
                 formatter.dateFormat = dateFormat
-                if let date = formatter.dateFromString(string) {
+                if let date = formatter.dateFromString(string as String) {
                     self.init(timeInterval:0, sinceDate:date)
                 } else {
                     self.init()
@@ -106,7 +106,7 @@ extension NSDate {
         return self.toString(dateStyle: .ShortStyle, timeStyle: .ShortStyle, doesRelativeDateFormatting: false)
     }
     
-    func toString(#format: DateFormat) -> String
+    func toString(format format: DateFormat) -> String
     {
         var dateFormat: String
         switch format {
@@ -124,7 +124,7 @@ extension NSDate {
         return formatter.stringFromDate(self)
     }
 
-    func toString(#dateStyle: NSDateFormatterStyle, timeStyle: NSDateFormatterStyle, doesRelativeDateFormatting: Bool = false) -> String
+    func toString(dateStyle dateStyle: NSDateFormatterStyle, timeStyle: NSDateFormatterStyle, doesRelativeDateFormatting: Bool = false) -> String
     {
         let formatter = NSDateFormatter()
         formatter.dateStyle = dateStyle

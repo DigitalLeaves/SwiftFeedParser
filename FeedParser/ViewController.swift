@@ -42,7 +42,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     // MARK: - UISearchBarDelegate methods
     
     func searchBarSearchButtonClicked(searchBar: UISearchBar) {
-        if countElements(searchBar.text) < 1 { return }
+        if searchBar.text?.characters.count < 1 { return }
         self.searchBar.resignFirstResponder()
         self.tableView.hidden =  true
         
@@ -51,7 +51,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         self.loadingLabel.hidden = false
         // start parsing feed
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), { () -> Void in
-            self.parser = FeedParser(feedURL: self.searchBar.text)
+            self.parser = FeedParser(feedURL: self.searchBar.text!)
             self.parser?.delegate = self
             self.parser?.parse()
         })
@@ -121,13 +121,13 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     func feedParser(parser: FeedParser, didParseChannel channel: FeedChannel) {
         // Here you could react to the FeedParser identifying a feed channel.
         dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            println("Feed parser did parse channel \(channel)")
+            print("Feed parser did parse channel \(channel)")
         })
     }
     
     func feedParser(parser: FeedParser, didParseItem item: FeedItem) {
         dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            println("Feed parser did parse item \(item.description)")
+            print("Feed parser did parse item \(item.feedTitle)")
             self.entries?.append(item)
         })
     }
@@ -135,12 +135,12 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     func feedParser(parser: FeedParser, successfullyParsedURL url: String) {
         dispatch_async(dispatch_get_main_queue(), { () -> Void in
             if (self.entries?.count > 0) {
-                println("All feeds parsed.")
+                print("All feeds parsed.")
                 self.tableView.hidden = false
                 self.loadingLabel.hidden = true
                 self.tableView.reloadData()
             } else {
-                println("No feeds found at url \(url).")
+                print("No feeds found at url \(url).")
                 self.tableView.hidden = true
                 self.loadingLabel.hidden = false
                 self.loadingLabel.text = "No feeds found at url \(url)."
@@ -150,7 +150,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     
     func feedParser(parser: FeedParser, parsingFailedReason reason: String) {
         dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            println("Feed parsed failed: \(reason)")
+            print("Feed parsed failed: \(reason)")
             self.entries = []
             self.tableView.hidden = true
             self.loadingLabel.text = "Failed to retrieve feeds from \(self.parser!.feedURL)"
@@ -158,7 +158,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     }
     
     func feedParserParsingAborted(parser: FeedParser) {
-        println("Feed parsing aborted by the user")
+        print("Feed parsing aborted by the user")
         self.entries = []
         self.tableView.hidden = true
         self.loadingLabel.text = "Feed loading cancelled by the user."
@@ -167,11 +167,17 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     // MARK: - Network methods
     func loadImageSynchronouslyFromURLString(urlString: String) -> UIImage? {
         if let url = NSURL(string: urlString) {
-            var request = NSMutableURLRequest(URL: url)
+            let request = NSMutableURLRequest(URL: url)
             request.timeoutInterval = 30.0
             var response: NSURLResponse?
-            var error: NSErrorPointer = nil
-            var data = NSURLConnection.sendSynchronousRequest(request, returningResponse: &response, error: error)
+            let error: NSErrorPointer = nil
+            var data: NSData?
+            do {
+                data = try NSURLConnection.sendSynchronousRequest(request, returningResponse: &response)
+            } catch let error1 as NSError {
+                error.memory = error1
+                data = nil
+            }
             if (data != nil) {
                 return UIImage(data: data!)
             }

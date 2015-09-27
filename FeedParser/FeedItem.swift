@@ -14,7 +14,7 @@ let kReadyFeedItemImageMinSize: CGFloat = 75
     func feedItem(feedItem: FeedItem, changedMainImage mainImage: UIImage)
 }
 
-class FeedItem: NSObject, Printable, Equatable, Hashable {
+class FeedItem: NSObject {
     // MARK: - mandatory
     var feedTitle: String?
     var feedLink: String?
@@ -76,7 +76,7 @@ class FeedItem: NSObject, Printable, Equatable, Hashable {
         let regex = "['\"][^'|^\"]*?(?:png|jpg|jpeg|gif)[^'|^\"]*?['\"]"
         var substr = content
         var result: [String] = []
-        while let match = substr.rangeOfString(regex, options: .RegularExpressionSearch | .CaseInsensitiveSearch) {
+        while let match = substr.rangeOfString(regex, options: [.RegularExpressionSearch, .CaseInsensitiveSearch]) {
             var matchingString = substr.substringWithRange(match)
             matchingString = matchingString.substringFromIndex(matchingString.startIndex.successor())
             matchingString = matchingString.substringToIndex(matchingString.endIndex.predecessor())
@@ -84,7 +84,7 @@ class FeedItem: NSObject, Printable, Equatable, Hashable {
             if matchingString.rangeOfString("http:", options: .CaseInsensitiveSearch) != nil || matchingString.rangeOfString("https://", options: .CaseInsensitiveSearch) != nil {
                 result.append(matchingString)
             }
-            substr = substr.substringFromIndex(advance(match.startIndex, countElements(matchingString)))
+            substr = substr.substringFromIndex(match.startIndex.advancedBy(matchingString.characters.count))
         }
         return result
     }

@@ -115,7 +115,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         if (feedRawContents != nil) { // already downloaded content?
             feedParser = NSXMLParser(data: feedRawContents!)
         } else { // retrieve content and start parsing.
-            feedParser = NSXMLParser(contentsOfURL: NSURL(string: feedURL))
+            feedParser = NSXMLParser(contentsOfURL: NSURL(string: feedURL)!)
         }
         if (feedParser != nil) { // content successfully retrieved
             self.parsingStatus = .Parsing
@@ -125,7 +125,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.feedParser!.parse()
         } else { // unable to retrieve content
             self.parsingStatus = .Failed
-            self.delegate?.feedParser?(self, parsingFailedReason: NSString(format: "%@: %@", NSLocalizedString("unable_retrieve_feed_contents",comment: ""), self.feedURL))
+            self.delegate?.feedParser?(self, parsingFailedReason: NSString(format: "%@: %@", NSLocalizedString("unable_retrieve_feed_contents",comment: ""), self.feedURL) as String)
         }
         
     }
@@ -143,9 +143,9 @@ class FeedParser: NSObject, NSXMLParserDelegate {
     // MARK: -- Element start
     
     /** Did start element. */
-    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String!, qualifiedName qName: String!, attributes attributeDict: [NSObject : AnyObject]!) {
+    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String]) {
         autoreleasepool {
-            self.currentPath = self.currentPath.stringByAppendingPathComponent(qName)
+            self.currentPath = NSURL(fileURLWithPath: self.currentPath).URLByAppendingPathComponent(qName!).path!
             self.currentElementIdentifier = elementName
             self.currentElementAttributes = attributeDict
             self.currentElementContent = ""
@@ -240,7 +240,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
 
     // MARK: -- Element end
     
-    func parser(parser: NSXMLParser, didEndElement elementName: String, namespaceURI: String!, qualifiedName qName: String!) {
+    func parser(parser: NSXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         autoreleasepool {
             // parse depending on feed type
             if self.feedType == .Atom { self.parseEndOfAtomElement(elementName, qualifiedName: qName) }
@@ -281,7 +281,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         else if self.currentPath == "/feed/entry/link" {
             if (self.feedType == .Atom) {
                 if (self.currentElementAttributes?["href"] != nil) && (self.currentElementAttributes?["rel"] == nil) {
-                    self.currentFeedItem?.feedLink = self.currentElementAttributes["href"] as? NSString
+                    self.currentFeedItem?.feedLink = self.currentElementAttributes["href"] as? String
                 }
             } else { self.currentFeedItem?.feedLink = self.currentElementContent }
         }
@@ -304,7 +304,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             
         // category
         else if self.currentPath == "/feed/category" {
-            self.currentFeedChannel?.channelCategory = self.currentElementAttributes?["term"] as? NSString
+            self.currentFeedChannel?.channelCategory = self.currentElementAttributes?["term"] as? String
         }
         else if self.currentPath == "/feed/entry/category" {
             if let category = self.currentElementAttributes?["term"] as? String {
@@ -327,7 +327,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         self.currentElementIdentifier = nil
         self.currentElementContent = nil
         
-        self.currentPath = self.currentPath.stringByDeletingLastPathComponent
+        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).URLByDeletingLastPathComponent?.path)!
 
     }
     
@@ -390,9 +390,9 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         
         // enclosures (RSS items only)
         else if self.currentPath == "/rss/channel/item/enclosure" {
-            let type:String? = self.currentElementAttributes?["type"] as? NSString
-            let content: String? = self.currentElementAttributes?["url"] as? NSString
-            let length:Int? = (self.currentElementAttributes?["length"] as? NSString)?.integerValue
+            let type:String? = self.currentElementAttributes?["type"] as? String
+            let content: String? = self.currentElementAttributes?["url"] as? String
+            let length:Int? = Int((self.currentElementAttributes?["length"] as? String)!)
             if content != nil && type != nil && length != nil {
                 let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
                 self.currentFeedItem?.feedEnclosures.append(feedEnclosure)
@@ -422,7 +422,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         self.currentElementIdentifier = nil
         self.currentElementContent = nil
         
-        self.currentPath = self.currentPath.stringByDeletingLastPathComponent
+        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).URLByDeletingLastPathComponent?.path)!
     }
     
     func parseEndOfRSS1Element(elementName: String, qualifiedName qName: String!) {
@@ -487,9 +487,9 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         
         // enclosures (RSS items only)
         else if self.currentPath == "/rdf:RDF/item/enc:enclosure" {
-            let type:String? = self.currentElementAttributes?["type"] as? NSString
-            let content: String? = self.currentElementAttributes?["url"] as? NSString
-            let length:Int? = (self.currentElementAttributes?["length"] as? NSString)?.integerValue
+            let type:String? = self.currentElementAttributes?["type"] as? String
+            let content: String? = self.currentElementAttributes?["url"] as? String
+            let length:Int? = Int((self.currentElementAttributes?["length"] as? String)!)
             if content != nil && type != nil && length != nil {
                 let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
                 self.currentFeedItem?.feedEnclosures.append(feedEnclosure)
@@ -498,7 +498,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             
         // category
         else if self.currentPath == "/rdf:RDF/channel/dc:category" {
-            if (self.feedType == .Atom) { self.currentFeedChannel?.channelCategory = self.currentElementAttributes?["term"] as? NSString }
+            if (self.feedType == .Atom) { self.currentFeedChannel?.channelCategory = self.currentElementAttributes?["term"] as? String }
             else { self.currentFeedChannel?.channelCategory = self.currentElementContent }
         }
         else if self.currentPath == "/rdf:RDF/channel/dc:category" {
@@ -520,14 +520,14 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         self.currentElementIdentifier = nil
         self.currentElementContent = nil
         
-        self.currentPath = self.currentPath.stringByDeletingLastPathComponent
+        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).URLByDeletingLastPathComponent?.path)!
     }
     
     // MARK: - Characters and CDATA blocks, other parsing methods
     
     func parser(parser: NSXMLParser, foundCDATA CDATABlock: NSData) {
-        var string: String? = NSString(data: CDATABlock, encoding: NSUTF8StringEncoding)
-        if (string == nil) { string = NSString (data: CDATABlock, encoding: NSISOLatin1StringEncoding) }
+        var string: String? = String(data: CDATABlock, encoding: NSUTF8StringEncoding)
+        if (string == nil) { string = String (data: CDATABlock, encoding: NSISOLatin1StringEncoding) }
         if (string == nil) { string = "" }
         
         self.currentElementContent = self.currentElementContent != nil ? self.currentElementContent + string! : string!
@@ -537,19 +537,19 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         self.currentElementContent = self.currentElementContent != nil ? self.currentElementContent + string : string
     }
 
-    func parserDidEndDocument(parser: NSXMLParser!) {
+    func parserDidEndDocument(parser: NSXMLParser) {
         self.delegate?.feedParser?(self, successfullyParsedURL: feedURL)
     }
     
     // MARK: - Utility methods
     
     func parseAtomLink(qualifiedName: NSString, attributes: [NSObject: AnyObject]?, content: String?) -> Void {
-        let rel: String? = attributes?["rel"] as? NSString
+        let rel: String? = attributes?["rel"] as? String
         
         // channel link:
         if (qualifiedName == "/feed/link") {
             if (attributes?["href"] != nil) && (rel == nil || rel == "alternate") {
-                self.currentFeedChannel?.channelLink = attributes?["href"] as? NSString
+                self.currentFeedChannel?.channelLink = attributes?["href"] as? String
             }
             return;
         }
@@ -557,12 +557,12 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         // item link:
         if (qualifiedName == "/feed/entry/link") {
             if (rel == nil) { // feed item link
-                self.currentFeedItem?.feedLink = attributes?["href"] as? NSString
+                self.currentFeedItem?.feedLink = attributes?["href"] as? String
             }
             else if (rel == "enclosure") {
                 // generate a new enclosure and add it to the current feed item.
-                let type:String? = attributes?["type"] as? NSString
-                let length:Int? = (attributes?["length"] as? NSString)?.integerValue
+                let type:String? = attributes?["type"] as? String
+                let length:Int? = Int((attributes?["length"] as? String)!)
                 if content != nil && type != nil && length != nil {
                     let feedEnclosure = FeedEnclosure(url: content!, type: type!, length: length!)
                     self.currentFeedItem?.feedEnclosures.append(feedEnclosure)
