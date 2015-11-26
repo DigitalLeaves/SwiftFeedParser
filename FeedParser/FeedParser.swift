@@ -308,6 +308,9 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         }
         else if self.currentPath == "/feed/entry/category" {
             if let category = self.currentElementAttributes?["term"] as? String {
+                if self.currentFeedItem.feedCategories == nil {
+                    self.currentFeedItem.feedCategories = [String]()
+                }
                 self.currentFeedItem?.feedCategories?.append(category)
             }
         }
@@ -404,6 +407,9 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentFeedChannel?.channelCategory = self.currentElementContent
         }
         else if self.currentPath == "/rss/channel/item/category" {
+            if self.currentFeedItem.feedCategories == nil {
+                self.currentFeedItem.feedCategories = [String]()
+            }
             self.currentFeedItem?.feedCategories?.append(self.currentElementContent)
         }
             
@@ -502,6 +508,9 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             else { self.currentFeedChannel?.channelCategory = self.currentElementContent }
         }
         else if self.currentPath == "/rdf:RDF/channel/dc:category" {
+            if self.currentFeedItem.feedCategories == nil {
+                self.currentFeedItem.feedCategories = [String]()
+            }
             self.currentFeedItem?.feedCategories?.append(self.currentElementContent)
         }
             
