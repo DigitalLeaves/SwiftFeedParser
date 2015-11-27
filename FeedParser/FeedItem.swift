@@ -28,9 +28,9 @@ class FeedItem: NSObject {
     var feedContentSnippet: String?
     var feedPubDate: NSDate?
     var feedAuthor: String?
-    var feedCategories: [String]?
+    var feedCategories: [String] = []
     var feedCommentsURL: String?
-    var feedComments: [String]?
+    var feedComments: [String] = []
     var feedEnclosures: [FeedEnclosure] = []
     var feedIdentifier: String?
     var feedSource: String? // rss channel where the feed came from, name or url.
@@ -104,7 +104,7 @@ class FeedItem: NSObject {
             if (feedContentSnippet != nil) { desc += "\t- Content Snippet: \(feedContentSnippet)\n" }
             if (feedPubDate != nil) { desc += "\t- Pub Date: \(feedPubDate)\n" }
             if (feedAuthor != nil) { desc += "\t- Author: \(feedAuthor)\n" }
-            if (feedCategories != nil) { desc += "\t- Categories: \(feedCategories)\n" }
+            if (feedCategories.count > 0) { desc += "\t- Categories: \(feedCategories)\n" }
             if (feedCommentsURL != nil) { desc += "\t- Comments URL: \(feedCommentsURL)\n" }
             if (!feedEnclosures.isEmpty) { desc += "\t- Enclosures: \(feedEnclosures)\n" }
             if (feedIdentifier != nil) { desc += "\t- Identifier: \(feedIdentifier)\n" }
