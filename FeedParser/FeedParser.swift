@@ -258,7 +258,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentFeedItem = nil
             
             // check for max items
-            self.feedItemsParsed++
+            self.feedItemsParsed += 1
             if (self.feedItemsParsed >= self.maxFeedsToParse) { // parse up to maxFeedsToParse
                 self.successfullyCloseParsingAfterMaxItemsFound()
             }
@@ -340,7 +340,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentFeedItem = nil
             
             // check for max items
-            self.feedItemsParsed++
+            self.feedItemsParsed += 1
             if (self.feedItemsParsed >= self.maxFeedsToParse) { // parse up to maxFeedsToParse
                 self.successfullyCloseParsingAfterMaxItemsFound()
             }
@@ -442,7 +442,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentFeedItem = nil
             
             // check for max items
-            self.feedItemsParsed++
+            self.feedItemsParsed += 1
             if (self.feedItemsParsed >= self.maxFeedsToParse) { // parse up to maxFeedsToParse
                 self.successfullyCloseParsingAfterMaxItemsFound()
             }
