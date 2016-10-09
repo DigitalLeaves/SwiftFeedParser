@@ -20,35 +20,35 @@ enum FeedType: String {
     func feedsDateFormat() -> DateFormat? {
         switch self {
         case .Atom:
-            return .ISO8601
+            return .iso8601
         case .RSS1:
-            return .ISO8601
+            return .iso8601
         case .RSS2:
-            return .RFC822
+            return .rfc822
         default:
-            return .RFC822
+            return .rfc822
         }
     }
 }
 
 enum ParsingType {
-    case Full, ItemsOnly, ChannelOnly
+    case full, itemsOnly, channelOnly
 }
 
 enum ParsingStatus {
-    case Stopped, Parsing, Succeed, Aborted, Failed;
+    case stopped, parsing, succeed, aborted, failed;
 }
 
 @objc protocol FeedParserDelegate {
-    optional func feedParser(parser: FeedParser, didParseChannel channel: FeedChannel)
-    optional func feedParser(parser: FeedParser, didParseItem item: FeedItem)
-    optional func feedParser(parser: FeedParser, successfullyParsedURL url: String)
-    optional func feedParser(parser: FeedParser, parsingFailedReason reason: String)
-    optional func feedParserParsingAborted(parser: FeedParser)
+    @objc optional func feedParser(_ parser: FeedParser, didParseChannel channel: FeedChannel)
+    @objc optional func feedParser(_ parser: FeedParser, didParseItem item: FeedItem)
+    @objc optional func feedParser(_ parser: FeedParser, successfullyParsedURL url: String)
+    @objc optional func feedParser(_ parser: FeedParser, parsingFailedReason reason: String)
+    @objc optional func feedParserParsingAborted(_ parser: FeedParser)
 }
 
 /** The feed parser parses a feed URL and communicates the results to its delegate */
-class FeedParser: NSObject, NSXMLParserDelegate {
+class FeedParser: NSObject, XMLParserDelegate {
     // parsing delegate
     var delegate: FeedParserDelegate?
     
@@ -57,27 +57,27 @@ class FeedParser: NSObject, NSXMLParserDelegate {
     var parsingType: ParsingType
     var parsingStatus: ParsingStatus
     var feedURL: String
-    var feedRawContents: NSData?
-    var feedEncoding = NSUTF8StringEncoding
-    var feedParser: NSXMLParser?
+    var feedRawContents: Data?
+    var feedEncoding = String.Encoding.utf8
+    var feedParser: XMLParser?
     var maxFeedsToParse = kReadyDefaultMaxFeedsToParse
     var feedItemsParsed = 0
     
     // Temporal parsing values
     var currentPath: String = "/"
     var currentElementIdentifier: String!
-    var currentElementAttributes: [NSObject: AnyObject]!
+    var currentElementAttributes: [AnyHashable: Any]!
     var currentElementContent: String!
     var currentFeedChannel: FeedChannel!
     var currentFeedItem: FeedItem!
     
     init(feedURL: String) {
         self.feedURL = feedURL
-        self.parsingType = .Full
-        self.parsingStatus = .Stopped
+        self.parsingType = .full
+        self.parsingStatus = .stopped
     }
     
-    convenience init(feedURL: String, feedRawContents: NSData) {
+    convenience init(feedURL: String, feedRawContents: Data) {
         self.init(feedURL: feedURL)
         self.feedRawContents = feedRawContents
     }
@@ -86,25 +86,25 @@ class FeedParser: NSObject, NSXMLParserDelegate {
     
     /** Resets the parser status, aborting any parsing process */
     func reset() {
-        if (parsingStatus == .Parsing) {
+        if (parsingStatus == .parsing) {
             feedParser?.abortParsing()
         }
-        parsingStatus = .Stopped
+        parsingStatus = .stopped
         currentElementIdentifier = nil
         currentElementAttributes = nil
         currentElementContent = nil
         currentFeedChannel = nil
         currentFeedItem = nil
         currentPath = "/"
-        parsingType = .Full
-        feedEncoding = NSUTF8StringEncoding
+        parsingType = .full
+        feedEncoding = String.Encoding.utf8
         feedType = .Unknown
         feedItemsParsed = 0
     }
     
     /** Starts the parsing process, requesting the feed URL content and parsing it with the NSXMLParser */
     func parse() {
-        if (parsingStatus == .Parsing) {
+        if (parsingStatus == .parsing) {
             delegate?.feedParser?(self, parsingFailedReason: NSLocalizedString("another_parsing_in_process", comment: ""))
             return
         }
@@ -113,28 +113,28 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         // Request the feed and start parsing.
         
         if (feedRawContents != nil) { // already downloaded content?
-            feedParser = NSXMLParser(data: feedRawContents!)
+            feedParser = XMLParser(data: feedRawContents!)
         } else { // retrieve content and start parsing.
-            feedParser = NSXMLParser(contentsOfURL: NSURL(string: feedURL)!)
+            feedParser = XMLParser(contentsOf: URL(string: feedURL)!)
         }
         if (feedParser != nil) { // content successfully retrieved
-            self.parsingStatus = .Parsing
+            self.parsingStatus = .parsing
             self.feedParser!.shouldProcessNamespaces = true
             self.feedParser!.shouldResolveExternalEntities = false
             self.feedParser!.delegate = self
             self.feedParser!.parse()
         } else { // unable to retrieve content
-            self.parsingStatus = .Failed
+            self.parsingStatus = .failed
             self.delegate?.feedParser?(self, parsingFailedReason: NSString(format: "%@: %@", NSLocalizedString("unable_retrieve_feed_contents",comment: ""), self.feedURL) as String)
         }
         
     }
     
     func abortParsing() {
-        if (parsingStatus == .Parsing) {
+        if (parsingStatus == .parsing) {
             feedParser?.abortParsing()
         }
-        parsingStatus = .Aborted
+        parsingStatus = .aborted
         delegate?.feedParserParsingAborted?(self)
     }
     
@@ -143,9 +143,9 @@ class FeedParser: NSObject, NSXMLParserDelegate {
     // MARK: -- Element start
     
     /** Did start element. */
-    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String]) {
+    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String]) {
         autoreleasepool {
-            self.currentPath = NSURL(fileURLWithPath: self.currentPath).URLByAppendingPathComponent(qName!).path!
+            self.currentPath = URL(fileURLWithPath: self.currentPath).appendingPathComponent(qName!).path
             self.currentElementIdentifier = elementName
             self.currentElementAttributes = attributeDict
             self.currentElementContent = ""
@@ -162,7 +162,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         }
     }
     
-    func parseStartOfAtomElement(elementName: String, attributes attributeDict: [NSObject: AnyObject]!) {
+    func parseStartOfAtomElement(_ elementName: String, attributes attributeDict: [String: Any]!) {
         // start of atom feed channel
         if self.currentPath == "/feed" {
             initializeNewFeedChannel(attributeDict)
@@ -175,7 +175,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         }
     }
     
-    func parseStartOfRSS2Element(elementName: String, attributes attributeDict: [NSObject: AnyObject]!) {
+    func parseStartOfRSS2Element(_ elementName: String, attributes attributeDict: [String: Any]!) {
         // start of atom feed channel
         if self.currentPath == "/rss/channel" {
             initializeNewFeedChannel(attributeDict)
@@ -188,7 +188,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         }
     }
     
-    func parseStartOfRSS1Element(elementName: String, attributes attributeDict: [NSObject: AnyObject]!) {
+    func parseStartOfRSS1Element(_ elementName: String, attributes attributeDict: [String: Any]!) {
         // start of atom feed channel
         if self.currentPath == "/rdf:RDF/channel" {
             initializeNewFeedChannel(attributeDict)
@@ -201,7 +201,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         }
     }
     
-    func initializeNewFeedChannel(attributeDict: [NSObject: AnyObject]!) {
+    func initializeNewFeedChannel(_ attributeDict: [String: Any]!) {
         self.currentFeedChannel = FeedChannel()
         self.currentFeedChannel.channelURL = self.feedURL
         if (self.feedType == .Atom) { // language of the channel is included in attribute xml:lang for Atom.
@@ -216,7 +216,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
     
     func initializeNewFeedItem() {
         // if we are looking just for the channel information, stop the parser right away.
-        if (self.parsingType == .ChannelOnly) { // do we have a valid channel?
+        if (self.parsingType == .channelOnly) { // do we have a valid channel?
             if self.currentFeedChannel?.isValid == true { self.successfullyCloseParsingAndReturnJustChannel(self.currentFeedChannel) }
             else {
                 self.abortParsingAndReportFailure("Failed to find a valid feed channel.")
@@ -240,7 +240,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
 
     // MARK: -- Element end
     
-    func parser(parser: NSXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
+    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         autoreleasepool {
             // parse depending on feed type
             if self.feedType == .Atom { self.parseEndOfAtomElement(elementName, qualifiedName: qName) }
@@ -249,7 +249,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         }
     }
     
-    func parseEndOfAtomElement(elementName: String, qualifiedName qName: String!) {
+    func parseEndOfAtomElement(_ elementName: String, qualifiedName qName: String!) {
         // item
         if self.currentPath == "/feed/entry" {
             if (self.currentFeedItem?.isValid == true) {
@@ -258,7 +258,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentFeedItem = nil
             
             // check for max items
-            self.feedItemsParsed++
+            self.feedItemsParsed += 1
             if (self.feedItemsParsed >= self.maxFeedsToParse) { // parse up to maxFeedsToParse
                 self.successfullyCloseParsingAfterMaxItemsFound()
             }
@@ -275,7 +275,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         // link
         else if self.currentPath == "/feed/link" {
             if (self.feedType == .Atom) {
-                self.parseAtomLink(self.currentPath, attributes: self.currentElementAttributes, content: self.currentElementContent);
+                self.parseAtomLink(self.currentPath as NSString, attributes: self.currentElementAttributes, content: self.currentElementContent);
             } else { self.currentFeedChannel?.channelLink = self.currentElementContent }
         }
         else if self.currentPath == "/feed/entry/link" {
@@ -327,11 +327,11 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         self.currentElementIdentifier = nil
         self.currentElementContent = nil
         
-        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).URLByDeletingLastPathComponent?.path)!
+        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).deletingLastPathComponent?.path)!
 
     }
     
-    func parseEndOfRSS2Element(elementName: String, qualifiedName qName: String!) {
+    func parseEndOfRSS2Element(_ elementName: String, qualifiedName qName: String!) {
         // item
         if self.currentPath == "/rss/channel/item" {
             if (self.currentFeedItem?.isValid == true) {
@@ -340,7 +340,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentFeedItem = nil
             
             // check for max items
-            self.feedItemsParsed++
+            self.feedItemsParsed += 1
             if (self.feedItemsParsed >= self.maxFeedsToParse) { // parse up to maxFeedsToParse
                 self.successfullyCloseParsingAfterMaxItemsFound()
             }
@@ -422,10 +422,10 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         self.currentElementIdentifier = nil
         self.currentElementContent = nil
         
-        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).URLByDeletingLastPathComponent?.path)!
+        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).deletingLastPathComponent?.path)!
     }
     
-    func parseEndOfRSS1Element(elementName: String, qualifiedName qName: String!) {
+    func parseEndOfRSS1Element(_ elementName: String, qualifiedName qName: String!) {
         // channel (only for RSS1)
         if (qName == "/rdf:RDF/channel" && self.feedType == .RSS1) {
             if (self.currentFeedChannel?.isValid == true) {
@@ -442,7 +442,7 @@ class FeedParser: NSObject, NSXMLParserDelegate {
             self.currentFeedItem = nil
             
             // check for max items
-            self.feedItemsParsed++
+            self.feedItemsParsed += 1
             if (self.feedItemsParsed >= self.maxFeedsToParse) { // parse up to maxFeedsToParse
                 self.successfullyCloseParsingAfterMaxItemsFound()
             }
@@ -520,30 +520,30 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         self.currentElementIdentifier = nil
         self.currentElementContent = nil
         
-        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).URLByDeletingLastPathComponent?.path)!
+        self.currentPath = (NSURL(fileURLWithPath: self.currentPath).deletingLastPathComponent?.path)!
     }
     
     // MARK: - Characters and CDATA blocks, other parsing methods
     
-    func parser(parser: NSXMLParser, foundCDATA CDATABlock: NSData) {
-        var string: String? = String(data: CDATABlock, encoding: NSUTF8StringEncoding)
-        if (string == nil) { string = String (data: CDATABlock, encoding: NSISOLatin1StringEncoding) }
+    func parser(_ parser: XMLParser, foundCDATA CDATABlock: Data) {
+        var string: String? = String(data: CDATABlock, encoding: String.Encoding.utf8)
+        if (string == nil) { string = String (data: CDATABlock, encoding: String.Encoding.isoLatin1) }
         if (string == nil) { string = "" }
         
         self.currentElementContent = self.currentElementContent != nil ? self.currentElementContent + string! : string!
     }
     
-    func parser(parser: NSXMLParser, foundCharacters string: String) {
+    func parser(_ parser: XMLParser, foundCharacters string: String) {
         self.currentElementContent = self.currentElementContent != nil ? self.currentElementContent + string : string
     }
 
-    func parserDidEndDocument(parser: NSXMLParser) {
+    func parserDidEndDocument(_ parser: XMLParser) {
         self.delegate?.feedParser?(self, successfullyParsedURL: feedURL)
     }
     
     // MARK: - Utility methods
     
-    func parseAtomLink(qualifiedName: NSString, attributes: [NSObject: AnyObject]?, content: String?) -> Void {
+    func parseAtomLink(_ qualifiedName: NSString, attributes: [AnyHashable: Any]?, content: String?) -> Void {
         let rel: String? = attributes?["rel"] as? String
         
         // channel link:
@@ -573,42 +573,42 @@ class FeedParser: NSObject, NSXMLParserDelegate {
         }
     }
     
-    func retrieveDateFromDateString(dateString: String, feedType: FeedType?) -> NSDate {
+    func retrieveDateFromDateString(_ dateString: String, feedType: FeedType?) -> Date {
         // extract date object from string
         let currentDateFormat: DateFormat? = feedType?.feedsDateFormat()
-        var currentDate: NSDate! = NSDate(fromString: dateString, format: currentDateFormat ?? .RFC822)
+        var currentDate: Date! = Date(fromString: dateString, format: currentDateFormat ?? .rfc822)
         // if we were unable to extract a proper date, try with other possible formats and fallback to current date.
-        if currentDate == nil { currentDate = NSDate(fromString: dateString, format: .IncompleteRFC822) }
-        if currentDate == nil { currentDate = NSDate(fromString: dateString, format: .ISO8601) }
-        if currentDate == nil { currentDate = NSDate() }
+        if currentDate == nil { currentDate = Date(fromString: dateString, format: .incompleteRFC822) }
+        if currentDate == nil { currentDate = Date(fromString: dateString, format: .iso8601) }
+        if currentDate == nil { currentDate = Date() }
         
         return currentDate
     }
     
-    func successfullyCloseParsingAndReturnJustChannel(feedChannel: FeedChannel) -> Void {
+    func successfullyCloseParsingAndReturnJustChannel(_ feedChannel: FeedChannel) -> Void {
         feedParser?.abortParsing()
         delegate?.feedParser?(self, didParseChannel: feedChannel)
-        parsingStatus = .Succeed
+        parsingStatus = .succeed
         delegate?.feedParser?(self, successfullyParsedURL: feedURL)
     }
     
     func successfullyCloseParsingAfterMaxItemsFound() -> Void {
         feedParser?.abortParsing()
-        parsingStatus = .Succeed
+        parsingStatus = .succeed
         delegate?.feedParser?(self, successfullyParsedURL: feedURL)
     }
     
-    func abortParsingAndReportFailure(reason: String) {
+    func abortParsingAndReportFailure(_ reason: String) {
         feedParser?.abortParsing()
-        parsingStatus = .Failed
+        parsingStatus = .failed
         delegate?.feedParser?(self, parsingFailedReason: reason)
     }
     
-    func encodingTypeFromString(textEncodingName: String?) -> NSStringEncoding? {
+    func encodingTypeFromString(_ textEncodingName: String?) -> String.Encoding? {
         if textEncodingName == nil { return nil; }
         
-        let cfEncoding: CFStringEncoding = CFStringConvertIANACharSetNameToEncoding(textEncodingName! as NSString as CFStringRef)
-        if cfEncoding != kCFStringEncodingInvalidId { return CFStringConvertEncodingToNSStringEncoding(cfEncoding); }
+        let cfEncoding: CFStringEncoding = CFStringConvertIANACharSetNameToEncoding(textEncodingName! as NSString as CFString)
+        if cfEncoding != kCFStringEncodingInvalidId { return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(cfEncoding)); }
         else { return nil; }
     }
     

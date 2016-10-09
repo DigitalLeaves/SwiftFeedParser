@@ -7,6 +7,26 @@
 //
 
 import UIKit
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 let kFeedParserExampleFeedSourceURL = "http://digitalleaves.com/blog/feed/"
 
@@ -32,25 +52,25 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         // Dispose of any resources that can be recreated.
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        tableView.hidden = true
+        tableView.isHidden = true
         searchBar.text = kFeedParserExampleFeedSourceURL
         loadingLabel.text = "Enter a feed URL to load contents"
     }
 
     // MARK: - UISearchBarDelegate methods
     
-    func searchBarSearchButtonClicked(searchBar: UISearchBar) {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         if searchBar.text?.characters.count < 1 { return }
         self.searchBar.resignFirstResponder()
-        self.tableView.hidden =  true
+        self.tableView.isHidden =  true
         
         self.entries = []
         self.loadingLabel.text = "Loading entries from \(searchBar.text)"
-        self.loadingLabel.hidden = false
+        self.loadingLabel.isHidden = false
         // start parsing feed
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), { () -> Void in
+        DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async(execute: { () -> Void in
             self.parser = FeedParser(feedURL: self.searchBar.text!)
             self.parser?.delegate = self
             self.parser?.parse()
@@ -59,13 +79,13 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     
     // MARK: - UITableViewDelegate/DataSource methods
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return entries?.count ?? 0
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell: UITableViewCell = tableView.dequeueReusableCellWithIdentifier("FeedItemCell", forIndexPath: indexPath) as UITableViewCell
-        let item = entries![indexPath.row]
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "FeedItemCell", for: indexPath) as UITableViewCell
+        let item = entries![(indexPath as NSIndexPath).row]
         
         // image
         if let imageView = cell.viewWithTag(1) as? UIImageView {
@@ -76,20 +96,20 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
                     item.mainImage = UIImage(named: "roundedDefaultFeed")
                     imageView.image = item.mainImage
                 }
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), { () -> Void in
+                DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async(execute: { () -> Void in
                     for imageURLString in item.imageURLsFromDescription! {
                         if let image = self.loadImageSynchronouslyFromURLString(imageURLString) {
                             item.mainImage = image
-                            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                            DispatchQueue.main.async(execute: { () -> Void in
                                 imageView.image = image
-                                self.tableView.reloadRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+                                self.tableView.reloadRows(at: [indexPath], with: .automatic)
                             })
                             break;
                         }
                     }
                 })
             }
-            imageView.layer.cornerRadius = CGRectGetWidth(imageView.frame) / 2.0
+            imageView.layer.cornerRadius = imageView.frame.width / 2.0
             imageView.clipsToBounds = true
         }
         
@@ -106,11 +126,11 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
         return cell
     }
 
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        tableView.deselectRowAtIndexPath(indexPath, animated: false)
-        if let feedItem = entries?[indexPath.row] {
-            if let url = NSURL(string: feedItem.feedLink ?? "") {
-                UIApplication.sharedApplication().openURL(url)
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
+        if let feedItem = entries?[(indexPath as NSIndexPath).row] {
+            if let url = URL(string: feedItem.feedLink ?? "") {
+                UIApplication.shared.openURL(url)
             }
         }
         
@@ -118,64 +138,64 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate
     
     // MARK: - FeedParserDelegate methods
     
-    func feedParser(parser: FeedParser, didParseChannel channel: FeedChannel) {
+    func feedParser(_ parser: FeedParser, didParseChannel channel: FeedChannel) {
         // Here you could react to the FeedParser identifying a feed channel.
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+        DispatchQueue.main.async(execute: { () -> Void in
             print("Feed parser did parse channel \(channel)")
         })
     }
     
-    func feedParser(parser: FeedParser, didParseItem item: FeedItem) {
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+    func feedParser(_ parser: FeedParser, didParseItem item: FeedItem) {
+        DispatchQueue.main.async(execute: { () -> Void in
             print("Feed parser did parse item \(item.feedTitle)")
             self.entries?.append(item)
         })
     }
     
-    func feedParser(parser: FeedParser, successfullyParsedURL url: String) {
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+    func feedParser(_ parser: FeedParser, successfullyParsedURL url: String) {
+        DispatchQueue.main.async(execute: { () -> Void in
             if (self.entries?.count > 0) {
                 print("All feeds parsed.")
-                self.tableView.hidden = false
-                self.loadingLabel.hidden = true
+                self.tableView.isHidden = false
+                self.loadingLabel.isHidden = true
                 self.tableView.reloadData()
             } else {
                 print("No feeds found at url \(url).")
-                self.tableView.hidden = true
-                self.loadingLabel.hidden = false
+                self.tableView.isHidden = true
+                self.loadingLabel.isHidden = false
                 self.loadingLabel.text = "No feeds found at url \(url)."
             }
         })
     }
     
-    func feedParser(parser: FeedParser, parsingFailedReason reason: String) {
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+    func feedParser(_ parser: FeedParser, parsingFailedReason reason: String) {
+        DispatchQueue.main.async(execute: { () -> Void in
             print("Feed parsed failed: \(reason)")
             self.entries = []
-            self.tableView.hidden = true
+            self.tableView.isHidden = true
             self.loadingLabel.text = "Failed to retrieve feeds from \(self.parser!.feedURL)"
         })
     }
     
-    func feedParserParsingAborted(parser: FeedParser) {
+    func feedParserParsingAborted(_ parser: FeedParser) {
         print("Feed parsing aborted by the user")
         self.entries = []
-        self.tableView.hidden = true
+        self.tableView.isHidden = true
         self.loadingLabel.text = "Feed loading cancelled by the user."
     }
 
     // MARK: - Network methods
-    func loadImageSynchronouslyFromURLString(urlString: String) -> UIImage? {
-        if let url = NSURL(string: urlString) {
-            let request = NSMutableURLRequest(URL: url)
+    func loadImageSynchronouslyFromURLString(_ urlString: String) -> UIImage? {
+        if let url = URL(string: urlString) {
+            let request = NSMutableURLRequest(url: url)
             request.timeoutInterval = 30.0
-            var response: NSURLResponse?
-            let error: NSErrorPointer = nil
-            var data: NSData?
+            var response: URLResponse?
+            let error: NSErrorPointer? = nil
+            var data: Data?
             do {
-                data = try NSURLConnection.sendSynchronousRequest(request, returningResponse: &response)
+                data = try NSURLConnection.sendSynchronousRequest(request as URLRequest, returning: &response)
             } catch let error1 as NSError {
-                error.memory = error1
+                error??.pointee = error1
                 data = nil
             }
             if (data != nil) {

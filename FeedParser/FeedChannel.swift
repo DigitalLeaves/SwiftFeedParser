@@ -18,7 +18,7 @@ class FeedChannel: NSObject {
     var channelLogoURL: String?
     var channelLogo: UIImage?
     var channelLanguage: String?
-    var channelDateOfLastChange: NSDate?
+    var channelDateOfLastChange: Date?
     var channelCategory: String?
     var channelID: Int? // from the READY API
     

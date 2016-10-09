@@ -17,31 +17,31 @@ extension String {
         var r: NSRange
         let pattern = "<[^>]+>"
         var s = self.stringByDecodingHTMLEscapeCharacters()
-        r = (s as NSString).rangeOfString(pattern, options: NSStringCompareOptions.RegularExpressionSearch)
+        r = (s as NSString).range(of: pattern, options: NSString.CompareOptions.regularExpression)
         while (r.location != NSNotFound) {
-            s = (s as NSString).stringByReplacingCharactersInRange(r, withString: " ")
-            r = (s as NSString).rangeOfString(pattern, options: NSStringCompareOptions.RegularExpressionSearch)
+            s = (s as NSString).replacingCharacters(in: r, with: " ")
+            r = (s as NSString).range(of: pattern, options: NSString.CompareOptions.regularExpression)
         }
-        return s.stringByReplacingOccurrencesOfString("  ", withString: " ")
+        return s.replacingOccurrences(of: "  ", with: " ")
     }
     
     func stringByDecodingHTMLEscapeCharacters() -> String {
-        var s = self.stringByReplacingOccurrencesOfString("&quot;", withString: "\"")
-        s = s.stringByReplacingOccurrencesOfString("&apos;", withString: "'")
-        s = s.stringByReplacingOccurrencesOfString("&amp;", withString: "&")
-        s = s.stringByReplacingOccurrencesOfString("&lt;", withString: "<")
-        s = s.stringByReplacingOccurrencesOfString("&gt;", withString: ">")
-        s = s.stringByReplacingOccurrencesOfString("&#39;", withString: "'")
-        s = s.stringByReplacingOccurrencesOfString("&ldquot;", withString: "\"")
-        s = s.stringByReplacingOccurrencesOfString("&rdquot;", withString: "\"")
-        s = s.stringByReplacingOccurrencesOfString("&nbsp;", withString: " ")
-        s = s.stringByReplacingOccurrencesOfString("&aacute;", withString: "á")
-        s = s.stringByReplacingOccurrencesOfString("&eacute;", withString: "é")
-        s = s.stringByReplacingOccurrencesOfString("&iacute;", withString: "í")
-        s = s.stringByReplacingOccurrencesOfString("&oacute;", withString: "ó")
-        s = s.stringByReplacingOccurrencesOfString("&uacute;", withString: "ú")
-        s = s.stringByReplacingOccurrencesOfString("&ntilde;", withString: "ñ")
-        s = s.stringByReplacingOccurrencesOfString("&#8217;", withString: "'")
+        var s = self.replacingOccurrences(of: "&quot;", with: "\"")
+        s = s.replacingOccurrences(of: "&apos;", with: "'")
+        s = s.replacingOccurrences(of: "&amp;", with: "&")
+        s = s.replacingOccurrences(of: "&lt;", with: "<")
+        s = s.replacingOccurrences(of: "&gt;", with: ">")
+        s = s.replacingOccurrences(of: "&#39;", with: "'")
+        s = s.replacingOccurrences(of: "&ldquot;", with: "\"")
+        s = s.replacingOccurrences(of: "&rdquot;", with: "\"")
+        s = s.replacingOccurrences(of: "&nbsp;", with: " ")
+        s = s.replacingOccurrences(of: "&aacute;", with: "á")
+        s = s.replacingOccurrences(of: "&eacute;", with: "é")
+        s = s.replacingOccurrences(of: "&iacute;", with: "í")
+        s = s.replacingOccurrences(of: "&oacute;", with: "ó")
+        s = s.replacingOccurrences(of: "&uacute;", with: "ú")
+        s = s.replacingOccurrences(of: "&ntilde;", with: "ñ")
+        s = s.replacingOccurrences(of: "&#8217;", with: "'")
 
         return s
     }

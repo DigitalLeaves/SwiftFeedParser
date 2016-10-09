@@ -11,7 +11,7 @@ let kReadyFeedItemImageMinSize: CGFloat = 75
 
 @objc protocol FeedItemDelegate {
     // The feed item main image changed.
-    func feedItem(feedItem: FeedItem, changedMainImage mainImage: UIImage)
+    func feedItem(_ feedItem: FeedItem, changedMainImage mainImage: UIImage)
 }
 
 class FeedItem: NSObject {
@@ -26,7 +26,7 @@ class FeedItem: NSObject {
     
     // MARK: - optional
     var feedContentSnippet: String?
-    var feedPubDate: NSDate?
+    var feedPubDate: Date?
     var feedAuthor: String?
     var feedCategories: [String] = []
     var feedCommentsURL: String?
@@ -59,8 +59,8 @@ class FeedItem: NSObject {
     }
     
 
-    func contentWasUpdated(extraContent: String? = nil) -> Void{
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), { () -> Void in
+    func contentWasUpdated(_ extraContent: String? = nil) -> Void{
+        DispatchQueue.global(qos: DispatchQoS.QoSClass.userInteractive).async(execute: { () -> Void in
             let newImagesFromContent = extraContent == nil ? self.getImageURLsFromContent(self.feedContent ?? "") : self.getImageURLsFromContent(extraContent!)
             
             // set or add new images
@@ -72,19 +72,20 @@ class FeedItem: NSObject {
     
     // MARK: - Load images from feeds.
     
-    func getImageURLsFromContent(content: String) -> [String] {
+    func getImageURLsFromContent(_ content: String) -> [String] {
         let regex = "['\"][^'|^\"]*?(?:png|jpg|jpeg|gif)[^'|^\"]*?['\"]"
         var substr = content
         var result: [String] = []
-        while let match = substr.rangeOfString(regex, options: [.RegularExpressionSearch, .CaseInsensitiveSearch]) {
-            var matchingString = substr.substringWithRange(match)
-            matchingString = matchingString.substringFromIndex(matchingString.startIndex.successor())
-            matchingString = matchingString.substringToIndex(matchingString.endIndex.predecessor())
+        while let match = substr.range(of: regex, options: [.regularExpression, .caseInsensitive]) {
+            var matchingString = substr.substring(with: match)
+            matchingString = matchingString.substring(from: matchingString.characters.index(after: matchingString.startIndex))
+            matchingString = matchingString.substring(to: matchingString.characters.index(before: matchingString.endIndex))
             
-            if matchingString.rangeOfString("http:", options: .CaseInsensitiveSearch) != nil || matchingString.rangeOfString("https://", options: .CaseInsensitiveSearch) != nil {
+            if matchingString.range(of: "http:", options: .caseInsensitive) != nil || matchingString.range(of: "https://", options: .caseInsensitive) != nil {
                 result.append(matchingString)
             }
-            substr = substr.substringFromIndex(match.startIndex.advancedBy(matchingString.characters.count))
+            // substr = substr.substringFromIndex(match.startIndex.advancedBy(matchingString.characters.count))
+            substr = substr.substring(from: substr.index(match.lowerBound, offsetBy: matchingString.characters.count))
         }
         return result
     }
