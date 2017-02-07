@@ -3,7 +3,7 @@ Swift Feed Parser
 
 A Swift Feed Parser based on NSXMLParser.
 
-![Demo/Testing UI](http://digitalleaves.com/blog/wp-content/uploads/2014/12/iOS-Simulator-Screen-Shot-14-Dec-2014-21.33.18-168x300.png)
+![Demo/Testing UI](http://digitalleaves.com/wp-content/uploads/2014/12/iOS-Simulator-Screen-Shot-14-Dec-2014-21.33.18-168x300.png)
 
 Swift Feed Parser is a lightweight library for parsing feeds (Atom/RDF/RSS2) written in Swift. It's been used in the development of [Ready the App news reader](http://readytheapp.com). You can use it freely on your personal or commercial projects. As the library is far from perfect, if you want to contribute or have any suggestions/optimisations, feel free to collaborate.
 
